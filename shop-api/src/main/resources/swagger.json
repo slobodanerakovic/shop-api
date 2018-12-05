@@ -1,0 +1,360 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "REST API",
+    "version": "2.0",
+    "title": "API"
+  },
+  "host": "localhost:9876",
+  "basePath": "/shop-api",
+  "tags": [
+    {
+      "name": "order-api",
+      "description": "Order API"
+    },
+    {
+      "name": "product-api",
+      "description": "Product API"
+    }
+  ],
+  "paths": {
+    "/api/orders/create": {
+      "post": {
+        "tags": [
+          "order-api"
+        ],
+        "summary": "createOrder",
+        "operationId": "createOrderUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "dto",
+            "description": "dto",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderDTO"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/orders/getall/{from}/{to}": {
+      "get": {
+        "tags": [
+          "order-api"
+        ],
+        "summary": "getOpenedStoreLocationNearBy",
+        "operationId": "getOpenedStoreLocationNearByUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "path",
+            "description": "from",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "to",
+            "in": "path",
+            "description": "to",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Order"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/orders/totalOrderAmount": {
+      "get": {
+        "tags": [
+          "order-api"
+        ],
+        "summary": "calculateTotalOrderAmount",
+        "operationId": "calculateTotalOrderAmountUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/products/create": {
+      "post": {
+        "tags": [
+          "product-api"
+        ],
+        "summary": "createProduct",
+        "operationId": "createProductUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "dto",
+            "description": "dto",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductDTO"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/products/delete/{id}": {
+      "delete": {
+        "tags": [
+          "product-api"
+        ],
+        "summary": "deleteProduct",
+        "operationId": "deleteProductUsingDELETE",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/products/getall": {
+      "get": {
+        "tags": [
+          "product-api"
+        ],
+        "summary": "getAll",
+        "operationId": "getAllUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProductDTO"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/products/update": {
+      "put": {
+        "tags": [
+          "product-api"
+        ],
+        "summary": "updateProduct",
+        "operationId": "updateProductUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "dto",
+            "description": "dto",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Status"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "definitions": {
+    "Order": {
+      "type": "object",
+      "properties": {
+        "buyerEmail": {
+          "type": "string"
+        },
+        "creationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "orderAmount": {
+          "type": "number",
+          "format": "double"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Product"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Order"
+    },
+    "OrderDTO": {
+      "type": "object",
+      "properties": {
+        "buyerEmail": {
+          "type": "string"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProductDTO"
+          }
+        }
+      },
+      "title": "OrderDTO"
+    },
+    "Product": {
+      "type": "object",
+      "properties": {
+        "creationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "modificationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "order": {
+          "$ref": "#/definitions/Order"
+        },
+        "price": {
+          "type": "number",
+          "format": "double"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Product"
+    },
+    "ProductDTO": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "ProductDTO"
+    },
+    "Status": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "title": "Status"
+    },
+    "View": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        }
+      },
+      "title": "View"
+    }
+  }
+}

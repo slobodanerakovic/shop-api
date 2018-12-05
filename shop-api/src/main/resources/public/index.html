@@ -1,0 +1,335 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet"
+	href="http://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+
+<style type="text/css">
+#map {
+	height: 400px;
+	background-color: grey;
+	border: 1px solid black;
+}
+
+#city-list {
+	list-style: none;
+}
+
+.hand {
+	cursor: pointer;
+}
+
+.min-w {
+	min-width: 1400px;
+}
+
+.hidden {
+	display: none;
+}
+</style>
+</head>
+<body>
+
+	<div id="loading" class="text-center">
+		<h1 class="badge-danger text-center mt-5">Application is
+			loading...</h1>
+		<img src="loading.gif" class="centered">
+	</div>
+	
+		<div id="main_container" class="invisible">
+	
+	<div class="bg-info p-3 mx-5 mt-3 text-center text-white"
+		id="header-title">
+		<h2><b>SHOP DASHBOARD</b></h2>
+	</div>
+	
+	<div id="container" class="text-center mb-5">
+		<div class="bg-success mx-5 mt-3 text-center text-white"
+		id="header-title">
+		<h3><b>PRODUCT MANAGEMENT</b></h3>
+	</div>
+		<div>
+			<button id="createProduct" class="btn-danger hand m-2 p-2">Create Product</button>
+			<label>Name</label> <input id="name" type="text" /> 
+			<label>Price</label> <input id="price" type="text" />
+		</div>
+		<div>
+			<button id="getAll" class="btn-primary hand mt-5 p-2">Get All Products</button>
+			<div id="productContainer" class="px-5 hidden" >
+					<div class="bg-warning mb-3 p-3 mt-3 text-center font-weight-bold" id="result-title">
+						<h2><b></b></h2>
+					</div>
+				<table id="product-data"
+				class="table table-sm table-bordered table-striped text-center table-success mb-5">
+				<tr>
+					<th></th>
+					<th class="text-center" valign="top">PRODUCT ID</th>
+					<th class="text-center" valign="top">PRODUCT NAME</th>
+					<th class="text-center" valign="top">PRODUCT PRICE</th>
+					<th class="text-center" valign="top">DELETE</th>
+					<th class="text-center" valign="top">UPDATE</th>
+				</tr>
+			</table>
+			</div>
+		</div>
+		
+		
+		<div class="bg-success mx-5 mt-3 text-center text-white"
+			id="header-title">
+			<h3><b>ORDER MANAGEMENT</b></h3>
+		</div>
+		<div>
+			<button id="getOrders" class="btn-danger hand m-2 p-2">Get Orders From</button>
+			<label>From</label> <input id="from" type="text" value="2017-09-12 00:00:00"/> 
+			<label>To</label> <input id="to" type="text"  value="2018-12-30 00:00:00"/>
+			<label>format: yyyy-MM-dd hh:mm:ss</label>
+			
+				<div id="orderContainer" class="px-5" >
+				<table id="order-data"
+				class="table table-sm table-bordered table-striped text-center table-success mt-3 hidden">
+				<tr>
+					<th></th>
+					<th class="text-center" valign="top">BUYER'S EMAIL</th>
+					<th class="text-center" valign="top">PRODUCT NAME</th>
+					<th class="text-center" valign="top">PRODUCT PRICE</th>
+				</tr>
+			</table>
+			</div>
+		</div>
+		<div>
+			<button id="totalOrder" class="btn-primary hand m-2 p-2">Get Total Amount</button>
+			<span id="total"></span> 
+		</div>
+
+	</div>
+</div>
+	<script src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript">
+	
+		window.addEventListener('load', function(e) {
+			let remoteDataManager= new RemoteDataManager();
+			
+			let url = 'http://localhost:9876/shop-api/init/';
+			remoteDataManager.ajaxRemote(url, null, 'GET', false, true);
+			
+			setTimeout(function() {
+				$("#loading").hide();
+				$("#main_container").removeClass('invisible');
+			}, 1000);
+			
+			let commandManager = new CommandManager(remoteDataManager);
+		});
+		
+		class RemoteDataManager {
+			
+			ajaxRemote(url, data, type, isProduct, ignore) {
+				
+			let self = this;
+	        $.ajax({
+                type: type,
+                contentType: "application/json",
+                data: data,
+                url: url,
+                success: function (data) {
+                	if(ignore)
+                		return;
+                	
+                	if(isProduct){
+	                	if(type !== 'GET'){
+	                		self.handleProductCUDActionData(type);
+	                	}else {
+	                		self.handleProductGetData(data, type);
+	                	}
+                	}else {
+                		self.handleOrderGetData(data);
+                	}
+                },
+                error: function (data) {
+                    console.log('Error:', data);
+                }
+            });
+			}
+			
+			handleProductCUDActionData(type){
+            	alert("Successfully executed action:"+type);
+				$(".product-appender").empty();
+				let url = 'http://localhost:9876/shop-api/api/products/getall';
+				this.ajaxRemote(url, null, 'GET', true);
+			}
+			
+			handleProductGetData(data, type){
+				let self = this;
+
+				$(".order-appender").empty();
+				$(".product-appender").empty();
+				$("#productContainer").show();
+				$("#result-title").html("FOUND TOTAL PRODUCTS: "+data.length);
+
+				if (data instanceof Array) {
+					$.each(data, function(i, dto) {
+						self.buildProductData(dto, i + 1);
+					});
+				} else {
+					if (data.uuid === undefined) {
+						self.manageCityList(data);
+					} else {
+						self.buildProductData(data, 1);
+					}
+				}
+        	}
+			
+			handleOrderGetData(data){
+				let self= this;
+				$(".product-appender").empty();
+				$(".order-appender").empty();
+				$("#productContainer").hide('hidden');
+				$("#order-data").show('hidden');
+				
+				if (data instanceof Array) {
+					$.each(data, function(i, dto) {
+						self.buildOrderData(dto, i + 1);
+					});
+				} else {
+					$("#order-data").hide('hidden');
+					$("#total").html("TOTAL ORDER'S AMOUNT : "+data+" $");
+				}	
+			}
+			
+			buildOrderData(dto, i){
+				$.each(dto.products, function(i, p) {
+					$('<tr class="order-appender">').append(
+							$('<td>').text(i),
+							$('<td>').text(dto.buyerEmail),
+							$('<td>').text(p.name),
+							$('<td>').text(p.price),
+						).appendTo('#order-data');
+				});
+			}
+			
+			buildProductData(dto, i) {
+				let self = this;
+
+				$('<tr class="product-appender">').append(
+					$('<td>').text(i),
+					$('<td>').text(dto.id),
+					$('<td>').text(dto.name),
+					$('<td>').text(dto.price),
+					$('<td>').html("<button class='btn-primary hand m-2 p-2' id='delete_" +btoa(dto.id)+ "'>" + dto.name + "</button>"),
+					$('<td>').html("<button class='btn-info hand m-2 p-2' id='update_" + btoa(dto.id) + "'>update</button><label>Name</label> <input id='nname_" +btoa(dto.id)+ "' type='text' /><label>Price</label> <input id='nprice_" +btoa(dto.id)+ "' type='text' />"),
+				).appendTo('#product-data');
+				
+			$("#delete_"+btoa(dto.id)).click(function() {
+				let url = 'http://localhost:9876/shop-api/api/products/delete/' + dto.id;
+				console.log("delete"+dto.id);
+				self.ajaxRemote(url, null, 'DELETE', true);
+			});
+			
+			$("#update_"+btoa(dto.id)).click(function() {
+				self.perpareUpdateData(dto.id, btoa(dto.id));
+			});
+			}
+			
+			perpareUpdateData(id, selector){
+				let self = this;
+
+				let name = $("#nname_"+selector).val();
+				let price = $("#nprice_"+selector).val();
+	
+				if (name.length < 1 && price.length < 1) {
+					alert("Name OR Price must exists for update");
+					return;
+				}
+				
+				if(price !== ''){
+					price = parseFloat(price);
+					if(isNaN(price)){
+					    alert("Price not a float!");
+						return;
+					}
+				}
+				const data = JSON.stringify({
+					name: name || null,
+				    price: price || null,
+				    id: id
+				   });
+				let url = 'http://localhost:9876/shop-api/api/products/update';
+				self.ajaxRemote(url, data, 'PUT', true);
+			}
+		}
+	
+		class CommandManager {
+			constructor(remoteDataManager) {
+				this.remoteDataManager = remoteDataManager;
+				this.initiateCommandListeners();
+			}
+	
+			initiateCommandListeners(){
+				let self = this;
+				$('#getAll').click(function(){
+					self.getAllProducts();
+				})
+				
+				$('#createProduct').click(function(){
+					self.createProduct();
+				})
+				
+				$('#totalOrder').click(function(){
+					self.getTotalAmount();
+				})
+				
+				$('#getOrders').click(function(){
+					self.getOrdersFromGivenPeriod();
+				})
+			}
+	
+			createProduct() {
+				let name = $("#name").val();
+				let price = $("#price").val();
+	
+				if (name.length < 1 || price.length < 1) {
+					alert("Name/Price are mandatory parameters");
+					return;
+				}
+				price = parseFloat(price);
+				if(isNaN(price)){
+				    alert("Price not a float!");
+					return;
+				}
+				const data = JSON.stringify({
+					name: name,
+				      price: price
+				   });
+				let url = 'http://localhost:9876/shop-api/api/products/create';
+				this.remoteDataManager.ajaxRemote(url, data, 'POST', true);
+			}
+	
+			getAllProducts() {
+				let url = 'http://localhost:9876/shop-api/api/products/getall';
+				this.remoteDataManager.ajaxRemote(url, null, 'GET', true);
+			}
+			
+			
+			getTotalAmount() {
+				let url = 'http://localhost:9876/shop-api/api/orders/totalOrderAmount';
+				this.remoteDataManager.ajaxRemote(url, null, 'GET', false);
+			}
+			
+			getOrdersFromGivenPeriod(){
+				let from = $("#from").val();
+				let to = $("#to").val();
+	
+				if (from.length < 1 || to.length < 1) {
+					alert("From/To are mandatory parameters");
+					return;
+				}
+				let url = 'http://localhost:9876/shop-api/api/orders/getall/' + from + '/' + to;
+				this.remoteDataManager.ajaxRemote(url, null, 'GET', false);
+			}
+		}
+	</script>
+</body>
+</html>
+
+
